@@ -18,7 +18,7 @@
 """Services for the ``v1/extract`` endpoint."""
 
 import time
-from typing import List
+from typing import List, Union
 from concurrent.futures import ThreadPoolExecutor
 
 import fitz
@@ -29,7 +29,7 @@ from src.utils import s3_connection
 from src.extract.models import ExtractedDoc, FailedExtraction, Page
 
 
-def extract_pdf(paths: List[str]) -> List[ExtractedDoc]:
+def extract_pdf(paths: List[str]) -> List[Union[ExtractedDoc, FailedExtraction]]:
     """Extract contents from a PDF.
 
     Args:
@@ -37,9 +37,10 @@ def extract_pdf(paths: List[str]) -> List[ExtractedDoc]:
             The path(s) of the documents to extract the text from.
 
     Returns:
-        :obj:`List[ExtractedDoc]`: The extracted contents from the docs.
+        :obj:`List[Union[ExtractedDoc, FailedExtraction]]`: The extracted
+        contents from the docs.
     """
-    def extract(path: str) -> ExtractedDoc:
+    def extract(path: str) -> Union[ExtractedDoc, FailedExtraction]:
         """Extract a single PDF.
 
         Args:
@@ -47,7 +48,8 @@ def extract_pdf(paths: List[str]) -> List[ExtractedDoc]:
                 The path of the documents to extract the text from.
 
         Returns:
-            :obj:`ExtractedDoc`: Th extracted contents from the doc.
+            :obj:`Union[ExtractedDoc, FailedExtraction]`: Th extracted contents
+            from the doc.
         """
         start_time = time.perf_counter()
         try:

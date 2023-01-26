@@ -22,14 +22,12 @@ from typing import List, Union
 from fastapi import APIRouter, Depends, status, Query
 from pydantic import Required
 
-from src.logging_utils import Logger
 from src.middlewares.authentication import check_api_key
 from src.middlewares.exception_handling import HTTPException
 from src.extract.models import ExtractedDoc, FailedExtraction
 from src.extract.service import extract_pdf
 
 router = APIRouter()
-logger = Logger(name=__name__)
 
 
 @router.post("",
@@ -53,7 +51,7 @@ def extract_view(
                /api/v1/extract/?path=123
 
     Returns:
-        :obj:`List[ExtractResponse]`: The extracted text.
+        :obj:`List[Union[ExtractedDoc, FailedExtraction]]`: The extracted text.
     """
     try:
         return extract_pdf(path)
