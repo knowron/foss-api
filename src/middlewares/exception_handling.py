@@ -25,7 +25,7 @@ from fastapi.exceptions import HTTPException as FastApiHTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from src.logging import Logger, ErrorModel
+from src.logging_utils import Logger, ErrorModel
 
 logger = Logger(name=__name__)
 
@@ -82,7 +82,7 @@ async def global_exception_handler(
 
     Returns:
         :obj:`fastapi.responses.JSONResponse`: A FastAPI JSON response that
-        wraps our :class:`src.logging.ErrorModel`, common to all errors.
+        wraps our :class:`src.logging_utils.ErrorModel`, common to all errors.
     """
     if isinstance(exc, RequestValidationError):
         status_code = status.HTTP_422_UNPROCESSABLE_ENTITY

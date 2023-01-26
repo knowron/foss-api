@@ -69,12 +69,28 @@ class Settings(BaseSettings):
     in the .env file take preference over default values in this class.
     """
 
+    ############
+    # FOSS API #
+    ############
     PROJECT_NAME: str = "KNOWRON FOSS API"
 
-    # Project's root directory
+    # Project's root directory.
     ROOT_DIR: Path = Path(__file__).parent.parent.resolve()
 
     FOSS_API_KEY: str
+
+    EXTRACTION_VERSION: str = "1.0"
+
+    # Number of concurrent documents to be extracted at once.
+    EXTRACT_WORKER_THREADS: int = 4
+
+    #######
+    # AWS #
+    #######
+    AWS_REGION_NAME: str
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    S3_BUCKET_NAME_STRING: str
 
     @classmethod
     def get_log_level(cls):
