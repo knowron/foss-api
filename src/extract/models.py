@@ -21,6 +21,7 @@ import base64
 from typing import List, Optional, Tuple, Union
 
 from pydantic import validator
+from fitz import sRGB_to_rgb
 
 from src.base_model import CamelModel
 from src.config import settings
@@ -36,12 +37,20 @@ class Span(CamelModel):
     size: float
     flags: int
     font: str
-    color: int
+    color: str
     ascender: float
     descender: float
     text: str
     origin: Tuple[float, float]
     bbox: Tuple[float, float, float, float]
+
+    @validator("color", pre=True, always=True)
+    def color_to_hex(cls, color: str) -> str:
+        """Transform the color from sRGB to hexadecimal (preceded by '#')."""
+        if isinstance(color, str):
+            return color
+        r, g, b = sRGB_to_rgb(color)
+        return f"#{r:02x}{g:02x}{b:02x}"
 
 
 class Line(CamelModel):
@@ -152,7 +161,7 @@ class ExtractedDoc(CamelModel):
     toc: Optional[List[List[Union[int, str]]]]
     pages: List[Page]
 
-    @validator("elapsed_seconds")
+    @validator("elapsed_seconds", pre=True, always=True)
     def round_elapsed_seconds(cls, elapsed_seconds: float) -> float:
         """Round the elapsed time (in seconds) to 2 decimals."""
         return round(elapsed_seconds, 2)
