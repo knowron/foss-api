@@ -17,6 +17,7 @@
 
 """Services for the ``v1/extract`` endpoint."""
 
+import hashlib
 import time
 from typing import List, Union
 from concurrent.futures import ThreadPoolExecutor
@@ -62,6 +63,7 @@ def extract_pdf(paths: List[str]) -> List[Union[ExtractedDoc, FailedExtraction]]
             )
         with fitz.open(stream=doc,
                        filetype="application/pdf") as doc:
+            doc_hash = hashlib.sha256(doc.stream).hexdigest()
             toc = doc.get_toc()
             if not toc:
                 toc = None
@@ -76,6 +78,7 @@ def extract_pdf(paths: List[str]) -> List[Union[ExtractedDoc, FailedExtraction]]
         elapsed_seconds = time.perf_counter() - start_time
         return ExtractedDoc(
             path=path,
+            hash=doc_hash,
             elapsed_seconds=elapsed_seconds,
             toc=toc,
             pages=pages

@@ -20,7 +20,7 @@
 import base64
 from typing import List, Optional, Tuple, Union
 
-from pydantic import validator
+from pydantic import validator, constr
 from fitz import sRGB_to_rgb
 
 from src.base_model import CamelModel
@@ -138,6 +138,8 @@ class ExtractedDoc(CamelModel):
     Attributes:
         path (:obj:`str`):
             The document path.
+        hash (:obj:`str`):
+            The SHA-256 hash of the document binary.
         elapsed_seconds (:obj:`float`):
             The number of seconds it took to process and extract the content of
             the document.
@@ -156,6 +158,7 @@ class ExtractedDoc(CamelModel):
     """
 
     path: str
+    hash: constr(min_length=64, max_length=64)
     elapsed_seconds: float
     extraction_version: str = settings.EXTRACTION_VERSION
     toc: Optional[List[List[Union[int, str]]]]
