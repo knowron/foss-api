@@ -32,6 +32,7 @@ class Span(CamelModel):
     For info about its attributes, see
     `https://pymupdf.readthedocs.io/en/latest/textpage.html#span-dictionary`__.
     """
+
     size: float
     flags: int
     font: str
@@ -49,6 +50,7 @@ class Line(CamelModel):
     For info about its attributes, see
     `https://pymupdf.readthedocs.io/en/latest/textpage.html#line-dictionary`__.
     """
+
     spans: List[Span]
     wmode: int
     dir: Tuple[float, float]
