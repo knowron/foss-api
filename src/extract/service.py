@@ -28,8 +28,52 @@ from src.utils import s3_connection
 from src.extract.models import ExtractedDoc, FailedExtraction, Page
 
 
-def extract_pdf(paths: List[str]) -> List[Union[ExtractedDoc, FailedExtraction]]:
-    """Extract contents from a PDF.
+def extract_single(path: str) -> Union[ExtractedDoc, FailedExtraction]:
+    """Extract a single PDF.
+
+    Args:
+        path (:obj:`str`):
+            The path of the documents to extract the text from.
+
+    Returns:
+        :obj:`Union[ExtractedDoc, FailedExtraction]`: Th extracted contents
+        from the doc.
+    """
+    start_time = time.perf_counter()
+    try:
+        doc = s3_connection.fetch_file(path)
+    except HTTPException as ex:
+        return FailedExtraction(
+            path=path,
+            status_code=ex.status_code,
+            detail=ex.detail
+        )
+    with fitz.open(stream=doc,
+                    filetype="application/pdf") as doc:
+        doc_hash = hashlib.sha256(doc.stream).hexdigest()
+        toc = doc.get_toc()
+        if not toc:
+            toc = None
+        pages = [
+            Page(
+                number=number,
+                width=page.get_text("dict")["width"],
+                height=page.get_text("dict")["height"],
+                blocks=[b for b in page.get_text("dict")["blocks"]]
+            ) for number, page in enumerate(doc, 1)
+        ]
+    elapsed_seconds = time.perf_counter() - start_time
+    return ExtractedDoc(
+        path=path,
+        hash=doc_hash,
+        elapsed_seconds=elapsed_seconds,
+        toc=toc,
+        pages=pages
+    )
+
+
+def extract(paths: List[str]) -> List[Union[ExtractedDoc, FailedExtraction]]:
+    """Extract contents from PDFs.
 
     Args:
         paths (:obj:`List[str]`):
@@ -39,47 +83,4 @@ def extract_pdf(paths: List[str]) -> List[Union[ExtractedDoc, FailedExtraction]]
         :obj:`List[Union[ExtractedDoc, FailedExtraction]]`: The extracted
         contents from the docs.
     """
-    def extract(path: str) -> Union[ExtractedDoc, FailedExtraction]:
-        """Extract a single PDF.
-
-        Args:
-            path (:obj:`str`):
-                The path of the documents to extract the text from.
-
-        Returns:
-            :obj:`Union[ExtractedDoc, FailedExtraction]`: Th extracted contents
-            from the doc.
-        """
-        start_time = time.perf_counter()
-        try:
-            doc = s3_connection.fetch_file(path)
-        except HTTPException as ex:
-            return FailedExtraction(
-                path=path,
-                status_code=ex.status_code,
-                detail=ex.detail
-            )
-        with fitz.open(stream=doc,
-                       filetype="application/pdf") as doc:
-            doc_hash = hashlib.sha256(doc.stream).hexdigest()
-            toc = doc.get_toc()
-            if not toc:
-                toc = None
-            pages = [
-                Page(
-                    number=number,
-                    width=page.get_text("dict")["width"],
-                    height=page.get_text("dict")["height"],
-                    blocks=[b for b in page.get_text("dict")["blocks"]]
-                ) for number, page in enumerate(doc, 1)
-            ]
-        elapsed_seconds = time.perf_counter() - start_time
-        return ExtractedDoc(
-            path=path,
-            hash=doc_hash,
-            elapsed_seconds=elapsed_seconds,
-            toc=toc,
-            pages=pages
-        )
-
-    return [extract(path) for path in paths]
+    return [extract_single(path) for path in paths]

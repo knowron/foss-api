@@ -25,7 +25,7 @@ from pydantic import Required
 from src.middlewares.authentication import check_api_key
 from src.middlewares.exception_handling import HTTPException
 from src.extract.models import ExtractedDoc, FailedExtraction
-from src.extract.service import extract_pdf
+from src.extract.service import extract
 
 router = APIRouter()
 
@@ -54,7 +54,7 @@ def extract_view(
         :obj:`List[Union[ExtractedDoc, FailedExtraction]]`: The extracted text.
     """
     try:
-        return extract_pdf(path)
+        return extract(path)
     except Exception as ex:  # pylint: disable=broad-except
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
