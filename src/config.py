@@ -81,9 +81,6 @@ class Settings(BaseSettings):
 
     EXTRACTION_VERSION: str = "1.0"
 
-    # Number of concurrent documents to be extracted at once.
-    EXTRACT_WORKER_THREADS: int = 4
-
     #######
     # AWS #
     #######

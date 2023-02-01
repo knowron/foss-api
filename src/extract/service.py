@@ -20,12 +20,10 @@
 import hashlib
 import time
 from typing import List, Union
-from concurrent.futures import ThreadPoolExecutor
 
 import fitz
 from fastapi import HTTPException
 
-from src.config import settings
 from src.utils import s3_connection
 from src.extract.models import ExtractedDoc, FailedExtraction, Page
 
@@ -84,7 +82,4 @@ def extract_pdf(paths: List[str]) -> List[Union[ExtractedDoc, FailedExtraction]]
             pages=pages
         )
 
-    with ThreadPoolExecutor(
-            max_workers=settings.EXTRACT_WORKER_THREADS) as executor:
-        running_tasks = [executor.submit(extract, path) for path in paths]
-        return [running_task.result() for running_task in running_tasks]
+    return [extract(path) for path in paths]
