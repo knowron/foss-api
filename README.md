@@ -48,6 +48,14 @@ pipenv lock
 
 <br>
 
+To **activate the virtual enviroment**:
+
+```console
+pipenv shell
+```
+
+<br>
+
 → For more info and commands, please visit [`pipenv`
 docs](https://pipenv.pypa.io/en/latest/index.html).
 
