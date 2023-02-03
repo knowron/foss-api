@@ -102,6 +102,7 @@ class ErrorModel(CamelModel):
 
     class Config:
         validate_assignment = True
+        use_enum_values = True
 
 
 class Logger:

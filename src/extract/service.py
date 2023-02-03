@@ -22,7 +22,8 @@ import time
 from typing import List, Union
 
 import fitz
-from fastapi import HTTPException
+from fastapi import HTTPException, status
+from botocore.exceptions import BotoCoreError
 
 from src.utils import s3_connection
 from src.extract.models import ExtractedDoc, FailedExtraction, Page
@@ -48,8 +49,16 @@ def extract_single(path: str) -> Union[ExtractedDoc, FailedExtraction]:
             status_code=ex.status_code,
             detail=ex.detail
         )
+    except BotoCoreError as ex:
+        ex_name: str = str(type(ex)).lstrip("<class '").rstrip("'>")
+        return FailedExtraction(
+            path=path,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=(f"{ex_name}: {ex}")
+        )
+
     with fitz.open(stream=doc,
-                    filetype="application/pdf") as doc:
+                   filetype="application/pdf") as doc:
         doc_hash = hashlib.sha256(doc.stream).hexdigest()
         toc = doc.get_toc()
         if not toc:
