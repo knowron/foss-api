@@ -19,7 +19,7 @@
 
 For the API docs see "/api/v1/docs" or "/api/v1/redoc".
 """
-
+import os
 import logging
 from pathlib import Path
 
@@ -59,8 +59,8 @@ api_v1 = FastAPI(
 
 # CORS. Specified in the .env, separated with commas, e.g.:
 # CORS=https://www.one.com,https://www.two.com
-origins = dotenv_values(Path("src/.env"))["CORS"].split(",")
-
+# origins = dotenv_values(Path("src/.env"))["CORS"].split(",")
+origins = os.environ["CORS"].split(",")
 # Include middleware
 app.add_middleware(
     CORSMiddleware,
