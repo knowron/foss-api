@@ -33,8 +33,10 @@ def main():
     ]
     subprocess.run(command, check=True)
 
+def __init__(self):
+    self.application = self.main
 
 if __name__ == "__main__":
-    application = main()
+    main()
 
 
