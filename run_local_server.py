@@ -21,18 +21,14 @@ import logging
 import subprocess
 from src.config import settings
 
-
-def main():
-    """Start up the server."""
-    command = [
-        "uvicorn",
-        "application:app",
-        "--use-colors",
-        f"--log-level={logging.getLevelName(settings.get_log_level()).lower()}",
-        "--port=8002"
-    ]
-    subprocess.run(command, check=True)
+"""Start up the server."""
+command = [
+    "uvicorn",
+    "application:app",
+    "--use-colors",
+    f"--log-level={logging.getLevelName(settings.get_log_level()).lower()}",
+    "--port=8002"
+]
+subprocess.run(command, check=True)
 
 
-if __name__ == "__main__":
-    main()
