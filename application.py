@@ -44,7 +44,7 @@ logger.setLevel(gunicorn_logger.level)
 fitz.TOOLS.store_shrink(100)
 
 # Instanciate app and API versions
-app = Starlette()
+application = Starlette()
 api_root = FastAPI(
     title="KNOWRON FOSS API",
     exception_handlers=exception_handlers
@@ -62,7 +62,7 @@ api_v1 = FastAPI(
 # origins = dotenv_values(Path("src/.env"))["CORS"].split(",")
 origins = os.environ["CORS"].split(",")
 # Include middleware
-app.add_middleware(
+application.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
@@ -76,5 +76,5 @@ api_v1.include_router(api_router_v1)
 
 # Mount API routes
 # Order matters! More specific routes must come first.
-app.mount("/api/v1", app=api_v1)
-app.mount("/", app=api_root)
+application.mount("/api/v1", app=api_v1)
+application.mount("/", app=api_root)
