@@ -57,28 +57,35 @@ def extract_single(path: str) -> Union[ExtractedDoc, FailedExtraction]:
             detail=(f"{ex_name}: {ex}")
         )
 
-    with fitz.open(stream=doc,
-                   filetype="application/pdf") as doc:
-        doc_hash = hashlib.sha256(doc.stream).hexdigest()
-        toc = doc.get_toc()
-        if not toc:
-            toc = None
-        pages = [
-            Page(
-                number=number,
-                width=page.get_text("dict")["width"],
-                height=page.get_text("dict")["height"],
-                blocks=[b for b in page.get_text("dict")["blocks"]]
-            ) for number, page in enumerate(doc, 1)
-        ]
-    elapsed_seconds = time.perf_counter() - start_time
-    return ExtractedDoc(
-        path=path,
-        hash=doc_hash,
-        elapsed_seconds=elapsed_seconds,
-        toc=toc,
-        pages=pages
-    )
+    try:
+        with fitz.open(stream=doc,
+                       filetype="application/pdf") as doc:
+            doc_hash = hashlib.sha256(doc.stream).hexdigest()
+            toc = doc.get_toc()
+            if not toc:
+                toc = None
+            pages = [
+                Page(
+                    number=number,
+                    width=page.get_text("dict")["width"],
+                    height=page.get_text("dict")["height"],
+                    blocks=[b for b in page.get_text("dict")["blocks"]]
+                ) for number, page in enumerate(doc, 1)
+            ]
+        elapsed_seconds = time.perf_counter() - start_time
+        return ExtractedDoc(
+            path=path,
+            hash=doc_hash,
+            elapsed_seconds=elapsed_seconds,
+            toc=toc,
+            pages=pages
+        )
+    except RuntimeError as ex:
+        return FailedExtraction(
+            path=path,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=(f"PyMuPDF couldn't process the doc: {ex}")
+        )
 
 
 def extract(paths: List[str]) -> List[Union[ExtractedDoc, FailedExtraction]]:
