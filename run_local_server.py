@@ -26,7 +26,7 @@ def main():
     """Start up the server."""
     command = [
         "uvicorn",
-        "application:app",
+        "application:application",
         "--use-colors",
         f"--log-level={logging.getLevelName(settings.get_log_level()).lower()}",
         "--port=8002"
@@ -36,4 +36,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
