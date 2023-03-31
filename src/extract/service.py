@@ -28,6 +28,8 @@ from botocore.exceptions import BotoCoreError
 from src.utils import s3_connection
 from src.extract.models import ExtractedDoc, FailedExtraction, Page
 
+import urllib.parse
+
 
 def extract_single(path: str) -> Union[ExtractedDoc, FailedExtraction]:
     """Extract a single PDF.
@@ -42,6 +44,7 @@ def extract_single(path: str) -> Union[ExtractedDoc, FailedExtraction]:
     """
     start_time = time.perf_counter()
     try:
+        path = urllib.parse.unquote(path)
         doc = s3_connection.fetch_file(path)
     except HTTPException as ex:
         return FailedExtraction(
@@ -64,14 +67,29 @@ def extract_single(path: str) -> Union[ExtractedDoc, FailedExtraction]:
             toc = doc.get_toc()
             if not toc:
                 toc = None
-            pages = [
-                Page(
+            
+            pages = []
+            
+            for number, page in enumerate(doc, 1):
+                page_dict = page.get_text("dict")
+
+                for block in page_dict["blocks"]:
+                    if block["type"] == 0:
+                        for line in block["lines"]:
+                            for span in line["spans"]:
+                                try:
+                                    span["text"] = span["text"].encode('utf8','surrogateescape')
+                                except:
+                                    span["text"] = " "
+
+                pages.append(Page(
                     number=number,
-                    width=page.get_text("dict")["width"],
-                    height=page.get_text("dict")["height"],
-                    blocks=[b for b in page.get_text("dict")["blocks"]]
-                ) for number, page in enumerate(doc, 1)
-            ]
+                    width=page_dict["width"],
+                    height=page_dict["height"],
+                    blocks=page_dict["blocks"]
+                )) 
+
+
         elapsed_seconds = time.perf_counter() - start_time
         return ExtractedDoc(
             path=path,
