@@ -19,6 +19,7 @@
 
 import hashlib
 import time
+import urllib.parse
 from typing import List, Union
 
 import fitz
@@ -27,8 +28,6 @@ from botocore.exceptions import BotoCoreError
 
 from src.utils import s3_connection
 from src.extract.models import ExtractedDoc, FailedExtraction, Page
-
-import urllib.parse
 
 
 def extract_single(path: str) -> Union[ExtractedDoc, FailedExtraction]:
@@ -67,29 +66,24 @@ def extract_single(path: str) -> Union[ExtractedDoc, FailedExtraction]:
             toc = doc.get_toc()
             if not toc:
                 toc = None
-            
             pages = []
-            
             for number, page in enumerate(doc, 1):
                 page_dict = page.get_text("dict")
-
                 for block in page_dict["blocks"]:
                     if block["type"] == 0:
                         for line in block["lines"]:
                             for span in line["spans"]:
                                 try:
-                                    span["text"] = span["text"].encode('utf8','surrogateescape')
+                                    span["text"] = span["text"].encode(
+                                        'utf8', 'surrogateescape')
                                 except:
                                     span["text"] = " "
-
                 pages.append(Page(
                     number=number,
                     width=page_dict["width"],
                     height=page_dict["height"],
                     blocks=page_dict["blocks"]
                 )) 
-
-
         elapsed_seconds = time.perf_counter() - start_time
         return ExtractedDoc(
             path=path,
