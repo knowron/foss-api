@@ -52,6 +52,17 @@ class Span(CamelModel):
         r, g, b = sRGB_to_rgb(color)
         return f"#{r:02x}{g:02x}{b:02x}"
 
+    @validator("text", pre=True, always=True)
+    def encode_text_utf8(cls, text: str) -> str:
+        """Encode the text in UTF-8.
+
+        If the text cannot be encoded, it is ignored.
+        """
+        try:
+            return text.encode("utf-8")
+        except ValueError:
+            return " "
+
 
 class Line(CamelModel):
     """A line block.
