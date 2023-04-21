@@ -28,6 +28,7 @@ def main():
         "uvicorn",
         "application:application",
         "--use-colors",
+        "--timeout-keep-alive=120",
         f"--log-level={logging.getLevelName(settings.get_log_level()).lower()}",
         "--port=8002"
     ]

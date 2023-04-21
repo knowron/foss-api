@@ -138,6 +138,6 @@ dmypy.json
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
-
+.ebextensions/*
 # MacOS
 **/.DS_Store
