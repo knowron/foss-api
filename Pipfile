@@ -13,6 +13,7 @@ casefy = "*"
 uvicorn = "*"
 requests = "*"
 boto3 = "*"
+botocore = "*"
 
 [dev-packages]
 
