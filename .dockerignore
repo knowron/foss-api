@@ -1,0 +1,17 @@
+.dockerignore
+.git
+.gitignore
+.vscode
+.pylintrc
+Dockerfile*
+Pipfile
+Pipfile.lock
+Procfile
+README.md
+LICENSE
+run_local_server.py
+**/__pycache__
+*.pyc
+**/venv
+**/.env
+**/env-example
