@@ -22,9 +22,27 @@ import requests
 
 import boto3
 import botocore
-from fastapi import HTTPException
 
+from utils.models import CamelModel
 from src.config import settings
+
+
+class ConnectionException(ConnectionError):
+    """Connection exception.
+
+    Attributes:
+        status_code (:obj:`int`):
+            The HTTP error status code.
+        detail (:obj:`str`):
+            Further information about what went wrong, e.g., ``"Not Found"``.
+    """
+    def __init__(self, status_code: str, detail: str):
+        self.status_code = status_code
+        self.detail = detail
+        super().__init__()
+
+    def __repr__(self):
+        return self.detail
 
 
 class S3ClientSingleton:
@@ -90,7 +108,7 @@ def fetch_file(path: str, create_new_session: bool = True) -> io.BytesIO:
     )
     res = requests.get(url)
     if res.status_code != 200:  # E.g., doc not found.
-        raise HTTPException(
+        raise ConnectionException(
             status_code=res.status_code,
             detail=str(res.reason)
         )
