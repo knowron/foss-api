@@ -17,16 +17,15 @@
 
 """Logging utilities."""
 
-import sys
 import logging
 import traceback
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, Optional, Union
+from typing import Optional
 
 from pydantic import validator
+from config import settings, Environment, ENV
 from utils.base_model import CamelModel
-from src.config import settings, Environment, ENV
 
 
 class OriginatingSystem(Enum):
@@ -44,6 +43,8 @@ class ErrorModel(CamelModel):
     """Error model.
 
     Attributes:
+        success (:obj:`bool`):
+            Whether the extraction succeeded. Always set to ``False``.
         timestamp (:obj:`str`):
             The time when the error happened.
         originating_system (:obj:`str`, `optional`):
@@ -60,6 +61,7 @@ class ErrorModel(CamelModel):
             The stack trace (if errors have happened).
     """
 
+    success: bool = False
     timestamp: str
     originating_system: OriginatingSystem = OriginatingSystem.FOSS_API
     environment: Environment = ENV
