@@ -23,8 +23,8 @@ from typing import List, Optional, Tuple, Union
 from pydantic import validator, constr
 from fitz import sRGB_to_rgb
 
-from base_model import CamelModel
-from src.config import settings
+from config import settings
+from utils.base_model import CamelModel
 
 
 class Span(CamelModel):
@@ -61,7 +61,7 @@ class Span(CamelModel):
         try:
             return text.encode("utf-8")
         except ValueError:
-            return " "
+            return ""
 
 
 class Line(CamelModel):
@@ -114,12 +114,18 @@ class ImageBlock(CamelModel):
     bpc: int
     transform: Tuple[float, float, float, float, float, float]
     size: int
-    image: bytes
+    image: Union[bytes, str]
 
     @validator("image")
-    def encode_image_base64(cls, image: bytes) -> bytes:
-        """Encode images in Base64 to avoid serialization issues."""
-        return base64.b64encode(image)
+    def encode_image_base64(cls, image: bytes) -> str:
+        """Encode images in Base64 to avoid serialization issues.
+
+        .. warning::
+
+           Images are ignored for now to reduce the response size.
+        """
+        return ""
+        # return base64.b64encode(image)  # b64encode returns bytes
 
 
 class Page(CamelModel):
@@ -179,3 +185,16 @@ class ExtractedDoc(CamelModel):
     def round_elapsed_seconds(cls, elapsed_seconds: float) -> float:
         """Round the elapsed time (in seconds) to 2 decimals."""
         return round(elapsed_seconds, 2)
+
+
+class Success(CamelModel):
+    """Response model when the extraction was successful.
+
+    Attributes:
+        success (:obj:`bool`):
+            Whether the extraction succeeded. Always set to ``True``.
+        key (:obj:`str`):
+            The S3 key to the extracted contents.
+    """
+    success: bool = True
+    key: str
