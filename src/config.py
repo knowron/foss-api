@@ -20,11 +20,9 @@
 import os
 import logging
 import warnings
-from pathlib import Path
 from enum import Enum
 
 from pydantic import BaseSettings
-from dotenv import load_dotenv
 
 
 class Environment(Enum):
@@ -63,22 +61,21 @@ ENV: Environment = (Environment(os.environ["ENV"])
 
 
 class Settings(BaseSettings):
-    """Settings.
-
-    Fields without a default value are defined in the .env file. Fields defined
-    in the .env file take preference over default values in this class.
-    """
-
+    """Settings."""
 
     EXTRACTION_VERSION: str = "1.0"
 
     #######
     # AWS #
     #######
+    # Set variables below as Environment Variables from the AWS Console.
     AWS_REGION_NAME: str
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
-    S3_BUCKET_NAME_STRING: str
+    AWS_S3_ACCESS_KEY_ID: str
+    AWS_S3_SECRET_ACCESS_KEY: str
+    # The bucket storing the PDF documents.
+    DOCS_S3_BUCKET_NAME: str
+    # The bucket storing the extracted contents of the PDF docs.
+    EXTRACTED_S3_BUCKET_NAME: str
 
     @classmethod
     def get_log_level(cls):
@@ -89,12 +86,9 @@ class Settings(BaseSettings):
             return logging.INFO
 
     class Config:
-        env_file = Path(__file__).resolve() / ".env"  # path to dotenv file
-        env_file_encoding = "utf-8"
         case_sensitive = True
 
 
-load_dotenv()
 settings = Settings()
 
 # Disable logging globally for all logs under current log level.
