@@ -22,22 +22,25 @@ See the `AWS Lambda docs
 """
 
 import hashlib
+import json
 import time
 import urllib.parse
 from typing import Union
+from pathlib import Path
 
 import fitz
 from botocore.exceptions import BotoCoreError
 
+from config import settings
 from utils import s3_connection
 from utils.logging_utils import Logger, ErrorModel
-from utils.models import ExtractedDoc
+from utils.models import ExtractedDoc, Success
 
 
 logger = Logger(name=__name__)
 
 
-def extract(path: str) -> Union[ExtractedDoc, ErrorModel]:
+def extract(path: str) -> Union[Success, ErrorModel]:
     """Extract the text of a PDF.
 
     Args:
@@ -45,7 +48,7 @@ def extract(path: str) -> Union[ExtractedDoc, ErrorModel]:
             The path of the document to extract the text from.
 
     Returns:
-        :obj:`Union[ExtractedDoc, ErrorModel]`: The extracted contents
+        :obj:`Union[Success, ErrorModel]`: The S3 key to the extracted contents
         from the document or an error if the extraction failed.
     """
     start_time = time.perf_counter()
@@ -53,7 +56,7 @@ def extract(path: str) -> Union[ExtractedDoc, ErrorModel]:
     # Fetch file from S3.
     try:
         path = urllib.parse.unquote(path)
-        doc = s3_connection.fetch_file(path)
+        doc = s3_connection.fetch_file(path, settings.DOCS_S3_BUCKET_NAME)
     except s3_connection.ConnectionException as ex:
         return logger.generate_error(
             path=path,
@@ -80,13 +83,22 @@ def extract(path: str) -> Union[ExtractedDoc, ErrorModel]:
                 for number, page in enumerate(doc, 1)
             ]
         elapsed_seconds = time.perf_counter() - start_time
-        return ExtractedDoc(
+        extracted_doc = ExtractedDoc(
             path=path,
             hash=doc_hash,
             elapsed_seconds=elapsed_seconds,
             toc=toc,
             pages=pages
         )
+        filepath = (Path("/tmp")/f"{path}").with_suffix('.json')
+        filepath.parents[0].mkdir(parents=True, exist_ok=True)
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(extracted_doc.dict() , f)
+        key = s3_connection.upload_file(
+            filepath,
+            settings.EXTRACTED_S3_BUCKET_NAME
+        )
+        return Success(key=key)
     except RuntimeError as ex:
         return logger.generate_error(
             path=path,
