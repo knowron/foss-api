@@ -15,7 +15,7 @@
 #
 # For license information on the libraries used, see LICENSE.
 
-"""Logging utilities for all endpoints."""
+"""Logging utilities."""
 
 import sys
 import logging
@@ -25,7 +25,7 @@ from enum import Enum
 from typing import Any, Dict, Optional, Union
 
 from pydantic import validator
-from src.base_model import CamelModel
+from utils.base_model import CamelModel
 from src.config import settings, Environment, ENV
 
 
@@ -41,9 +41,7 @@ class OriginatingSystem(Enum):
 
 
 class ErrorModel(CamelModel):
-    """Error model for all endpoints.
-
-    This is the schema that all endpoints will return when any error happens.
+    """Error model.
 
     Attributes:
         timestamp (:obj:`str`):
@@ -52,16 +50,8 @@ class ErrorModel(CamelModel):
             The system that generated the log.
         environment (:obj:`src.config.Environment`, `optional`):
             The environment in which the error occurred, e.g., "staging".
-        log_level (:obj:`str`):
-            The level of the log, e.g., "warning".
-        api_route (:obj:`str`):
-            The API endpoint the request was made to.
-        headers (:obj:`Dict[str, Any]`, `optional`):
-            The headers of the request.
-        query_params (:obj:`Dict[str, Any]`, `optional`):
-            The query parameters of the request.
-        request_body (:obj:`Union[dict, list]`, `optional`):
-            The body of the request.
+        path (:obj:`str`):
+            The path of the document that could not be extracted.
         status_code (:obj:`int`):
             The status code of the error, e.g., ``500``.
         message (:obj:`Optional[str]`):
@@ -74,10 +64,7 @@ class ErrorModel(CamelModel):
     originating_system: OriginatingSystem = OriginatingSystem.FOSS_API
     environment: Environment = ENV
     log_level: str
-    api_route: str
-    query_params: Dict[str, Any] = {}
-    headers: Dict[str, Any] = {}
-    request_body: Union[dict, list] = {}
+    path: str
     status_code: int
     message: Optional[str]
     stack_trace: Optional[str]
@@ -182,11 +169,8 @@ class Logger:
 
     def generate_error(
         self,
-        api_route: str,
+        path: str,
         status_code: int,
-        headers: Dict[str, Any] = {},
-        query_params: Dict[str, Any] = {},
-        request_body: Union[dict, list, CamelModel] = {},
         exception: Optional[Exception] = None
     ) -> ErrorModel:
         """Compile an :obj:`ErrorModel`.
@@ -199,9 +183,7 @@ class Logger:
         """
         if exception:
             message = str(exception)
-            # TODO: In Python 3.10 traceback.format_exception() has changed!
-            # See https://docs.python.org/3/library/traceback.html#traceback.format_exception
-            traceback_ = "".join(traceback.format_exception(*sys.exc_info()))
+            traceback_ = traceback.format_exc()
         else:
             message = None
             traceback_ = None
@@ -211,13 +193,7 @@ class Logger:
             originating_system=OriginatingSystem.FOSS_API,
             environment=ENV,
             log_level=logging.getLevelName(self._log_level),
-            api_route=api_route,
-            headers=headers,
-            query_params=query_params,
-            request_body=request_body.dict(
-                exclude_unset=True,
-                by_alias=True
-            ) if isinstance(request_body, CamelModel) else request_body,
+            path=path,
             status_code=status_code,
             message=message,
             stack_trace=traceback_

@@ -15,18 +15,14 @@
 #
 # For license information on the libraries used, see LICENSE.
 
-"""Base models for the JSON schemas in all endpoints."""
+"""Base model."""
 
 import casefy
 from pydantic import BaseModel
 
 
 class CamelModel(BaseModel):
-    """Model to handle snake_case to camelCase conversion in field names.
-
-    Models defined for the JSON schemas of the different endpoints must inherit
-    from this model, since KNOWRON uses camelCase for fields across REST APIs.
-    """
+    """Model to handle snake_case to camelCase conversion in field names."""
 
     class Config:
         alias_generator = casefy.camelcase

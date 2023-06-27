@@ -53,8 +53,8 @@ class Environment(Enum):
         return env in cls._value2member_map_
 
 
-# We keep this variable out of `Settings` because we need to access it before
-# the application is started.
+# We keep this variable out of `Settings` because we need to reference it from
+# the settings themselves.
 # We check if the environment variable "ENV" is defined and is a valid string,
 # if not we default to Environment.STAGING.
 ENV: Environment = (Environment(os.environ["ENV"])
@@ -69,15 +69,6 @@ class Settings(BaseSettings):
     in the .env file take preference over default values in this class.
     """
 
-    ############
-    # FOSS API #
-    ############
-    PROJECT_NAME: str = "KNOWRON FOSS API"
-
-    # Project's root directory.
-    ROOT_DIR: Path = Path(__file__).parent.parent.resolve()
-
-    FOSS_API_KEY: str
 
     EXTRACTION_VERSION: str = "1.0"
 

@@ -15,7 +15,7 @@
 #
 # For license information on the libraries used, see LICENSE.
 
-"""Models for the ``v1/extract`` endpoint."""
+"""Models for document extraction."""
 
 import base64
 from typing import List, Optional, Tuple, Union
@@ -23,7 +23,7 @@ from typing import List, Optional, Tuple, Union
 from pydantic import validator, constr
 from fitz import sRGB_to_rgb
 
-from src.base_model import CamelModel
+from base_model import CamelModel
 from src.config import settings
 
 
@@ -51,6 +51,17 @@ class Span(CamelModel):
             return color
         r, g, b = sRGB_to_rgb(color)
         return f"#{r:02x}{g:02x}{b:02x}"
+
+    @validator("text", pre=True, always=True)
+    def encode_text_utf8(cls, text: str) -> str:
+        """Encode the text in UTF-8.
+
+        If the text cannot be encoded, it is ignored.
+        """
+        try:
+            return text.encode("utf-8")
+        except ValueError:
+            return " "
 
 
 class Line(CamelModel):
@@ -168,20 +179,3 @@ class ExtractedDoc(CamelModel):
     def round_elapsed_seconds(cls, elapsed_seconds: float) -> float:
         """Round the elapsed time (in seconds) to 2 decimals."""
         return round(elapsed_seconds, 2)
-
-
-class FailedExtraction(CamelModel):
-    """Model for documents whose text could not be extracted.
-
-    Attributes:
-        path (:obj:`str`):
-            The document path.
-        status_code (:obj:`int`):
-            The HTTP error status code.
-        detail (:obj:`str`):
-            Further information about what went wrong, e.g., ``"Not Found"``.
-    """
-
-    path: str
-    status_code: int
-    detail: str
