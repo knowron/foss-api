@@ -19,12 +19,13 @@
 
 import io
 import requests
+from datetime import datetime, timezone
+from pathlib import Path
 
 import boto3
 import botocore
 
-from utils.models import CamelModel
-from src.config import settings
+from config import settings
 
 
 class ConnectionException(ConnectionError):
@@ -59,18 +60,52 @@ class S3ClientSingleton:
                 "s3",
                 config=botocore.client.Config(signature_version="s3v4"),
                 region_name=settings.AWS_REGION_NAME,
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+                aws_access_key_id=settings.AWS_REGION_NAME,
+                aws_secret_access_key=settings.AWS_S3_SECRET_ACCESS_KEY
             )
         return cls._instance
 
 
-def fetch_file(path: str, create_new_session: bool = True) -> io.BytesIO:
+def _get_s3_client(create_new_session: bool = True) -> botocore.client:
+    """Get an S3 client.
+
+    Args:
+        create_new_session(:obj:`str`, `optional`, defaults to :obj:`True`):
+            Whether to create a new session (and client) or not. Set to
+            :obj:`True` if multithreading is used. See
+            `https://boto3.amazonaws.com/v1/documentation/api/latest/guide/resources.html#multithreading-or-multiprocessing-with-resources`__
+            If set to :obj:`False` the same (default) session and client is
+            used in every call.
+
+    Returns:
+        :obj:`botocore.client`: The S3 client.
+    """
+    if create_new_session:
+        session = boto3.session.Session()
+        s3_client = session.client(
+            "s3",
+            config=botocore.client.Config(signature_version="s3v4"),
+            region_name=settings.AWS_REGION_NAME,
+            aws_access_key_id=settings.AWS_S3_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_S3_SECRET_ACCESS_KEY
+        )
+    else:
+        s3_client = S3ClientSingleton()
+    return s3_client
+
+
+def fetch_file(
+    filename: str,
+    bucket: str,
+    create_new_session: bool = True
+) -> io.BytesIO:
     """Download a file from AWS S3.
 
     Args:
-        path (:obj:`str`):
-            The path of file on S3.
+        filename (:obj:`str`):
+            The name (key) of the file on S3.
+        bucket (:obj:`str`):
+            The S3 bucket to fetch the file from.
         create_new_session(:obj:`str`, `optional`, defaults to :obj:`True`):
             Whether to create a new session (and client) or not. Set to
             :obj:`True` if multithreading is used. See
@@ -88,29 +123,52 @@ def fetch_file(path: str, create_new_session: bool = True) -> io.BytesIO:
         :obj:`fastapi.HTTPException`: If there was any problem when fetching the
         file (e.g., it was not found).
     """
-    if create_new_session:
-        session = boto3.session.Session()
-        s3_client = session.client(
-            "s3",
-            config=botocore.client.Config(signature_version="s3v4"),
-            region_name=settings.AWS_REGION_NAME,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
-        )
-    else:
-        s3_client = S3ClientSingleton()
+    s3_client = _get_s3_client(create_new_session)
     url = s3_client.generate_presigned_url(
         ClientMethod='get_object',
         Params={
-            'Bucket': settings.S3_BUCKET_NAME_STRING,
-            'Key': path
+            'Bucket': bucket,
+            'Key': filename
         }
     )
-    res = requests.get(url)
+    res = requests.get(url, timeout=120)
     if res.status_code != 200:  # E.g., doc not found.
         raise ConnectionException(
             status_code=res.status_code,
             detail=str(res.reason)
         )
-
     return io.BytesIO(res.content)
+
+
+def upload_file(
+    filepath: Path,
+    bucket: str,
+    create_new_session: bool = True
+) -> io.BytesIO:
+    """Upload a file to S3.
+
+    Args:
+        filepath (:obj:`pathlib.Path`):
+            The local path of the file to upload. To create the S3 key we
+            concatenate the filename with a timestamp in order to avoid
+            duplicate keys.
+        create_new_session(:obj:`str`, `optional`, defaults to :obj:`True`):
+            Whether to create a new session (and client) or not. Set to
+            :obj:`True` if multithreading is used. See
+            `https://boto3.amazonaws.com/v1/documentation/api/latest/guide/resources.html#multithreading-or-multiprocessing-with-resources`__
+            If set to :obj:`False` the same (default) session and client is
+            used in every call.
+
+    Returns:
+        :obj:`key`: The S3 key of the uploaded file.
+    """
+    s3_client = _get_s3_client(create_new_session)
+    timestamp: str = datetime.now(timezone.utc).isoformat(timespec="microseconds")
+    # Remove first dir (i.e. "/tmp/") and add timestamp and ".json" extension.
+    key: str = f"{Path(*filepath.parts[2:]).with_suffix('')}_{timestamp}.json"
+    s3_client.upload_file(
+        Filename=filepath,
+        Bucket=bucket,
+        Key=key
+    )
+    return key
