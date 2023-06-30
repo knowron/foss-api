@@ -20,78 +20,10 @@
 import logging
 import traceback
 from datetime import datetime, timezone
-from enum import Enum
 from typing import Optional
 
-from pydantic import validator
-from config import settings, Environment, ENV
-from utils.base_model import CamelModel
-
-
-class OriginatingSystem(Enum):
-    """The system in which the error occurred.
-
-    Attributes:
-        FOSS_API:
-            The FOSS API.
-    """
-
-    FOSS_API = "foss-api"
-
-
-class ErrorModel(CamelModel):
-    """Error model.
-
-    Attributes:
-        success (:obj:`bool`):
-            Whether the extraction succeeded. Always set to ``False``.
-        timestamp (:obj:`str`):
-            The time when the error happened.
-        originating_system (:obj:`str`, `optional`):
-            The system that generated the log.
-        environment (:obj:`src.config.Environment`, `optional`):
-            The environment in which the error occurred, e.g., "staging".
-        path (:obj:`str`):
-            The path of the document that could not be extracted.
-        status_code (:obj:`int`):
-            The status code of the error, e.g., ``500``.
-        message (:obj:`Optional[str]`):
-            The error message (if any).
-        stack_trace (:obj:`Optional[str]`):
-            The stack trace (if errors have happened).
-    """
-
-    success: bool = False
-    timestamp: str
-    originating_system: OriginatingSystem = OriginatingSystem.FOSS_API
-    environment: Environment = ENV
-    log_level: str
-    path: str
-    status_code: int
-    message: Optional[str]
-    stack_trace: Optional[str]
-
-    @validator("message")
-    def set_default_message(cls, message):
-        """Set a default message if needed.
-
-        The default value is set when the passed message is empty or
-        :obj:`None`.
-        """
-        return message or "no message available"
-
-    @validator("stack_trace")
-    def set_default_stack_trace(cls, stack_trace):
-        """Set a default stack trace if needed.
-
-        The default value is set when the passed stack trace is empty or
-        :obj:`None`.
-        """
-        return stack_trace or "no stack trace available"
-
-    class Config:
-        validate_assignment = True
-        use_enum_values = True
+from config import settings, ENV
+from .models import ErrorModel, OriginatingSystem
 
 
 class Logger:
