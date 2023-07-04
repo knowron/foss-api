@@ -139,5 +139,9 @@ dmypy.json
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 .ebextensions/*
+
 # MacOS
 **/.DS_Store
+
+# AWS
+AWSCLIV2.pkg

@@ -1,5 +1,0 @@
-# AWS Config
-AWS_REGION_NAME=aws-region
-AWS_ACCESS_KEY_ID=aws-access-key
-AWS_SECRET_ACCESS_KEY=aws-secret-key
-S3_BUCKET_NAME_STRING=s3-bucket-name-string
