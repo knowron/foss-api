@@ -29,12 +29,13 @@ from typing import Union
 from pathlib import Path
 
 import fitz
+from fitz import sRGB_to_rgb
 from botocore.exceptions import BotoCoreError
 
 from config import settings
 from utils import s3_connection
 from utils.logging_utils import Logger, ErrorModel
-from utils.models import ExtractedDoc, Success
+from utils.models import Success
 
 
 logger = Logger(name=__name__)
@@ -78,22 +79,42 @@ def extract(path: str) -> Union[Success, ErrorModel]:
             toc = doc.get_toc()
             if not toc:
                 toc = None
-            pages = [
-                dict({"number": number}, **page.get_text("dict"))
-                for number, page in enumerate(doc, 1)
-            ]
+            pages = []
+            for number, page in enumerate(doc, 1):
+                page = dict({"number": number}, **page.get_text("dict"))
+                for block in page["blocks"]:
+                    if block["type"] == 0:  # text
+                        for line in block["lines"]:
+                            for span in line["spans"]:
+                                # Encode the text in UTF-8. If the text cannot
+                                # be encoded, it is ignored.
+                                try:
+                                    span["text"].encode("utf-8")
+                                except ValueError:
+                                    span["text"] = ""
+                                # Transform the color from sRGB to hexadecimal
+                                # (preceded by '#').
+                                if not isinstance(span["color"], str):
+                                    r, g, b = sRGB_to_rgb(span["color"])
+                                    span["color"] = f"#{r:02x}{g:02x}{b:02x}"
+                    elif block["type"] == 1:  # image
+                        # For now, we don't return images to reduce the response
+                        # size.
+                        block["image"] = ""
+                pages.append(page)
         elapsed_seconds = time.perf_counter() - start_time
-        extracted_doc = ExtractedDoc(
-            path=path,
-            hash=doc_hash,
-            elapsed_seconds=elapsed_seconds,
-            toc=toc,
-            pages=pages
-        )
+        extracted_doc = {
+            "path": path,
+            "hash": doc_hash,
+            "elapsed_seconds": round(elapsed_seconds, 2),
+            "extraction_version": settings.EXTRACTION_VERSION,
+            "toc": toc,
+            "pages": pages
+        }
         filepath = (Path("/tmp")/f"{path}").with_suffix('.json')
         filepath.parents[0].mkdir(parents=True, exist_ok=True)
         with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(extracted_doc.dict() , f)
+            json.dump(extracted_doc, f)
         key = s3_connection.upload_file(
             filepath,
             settings.EXTRACTED_S3_BUCKET_NAME

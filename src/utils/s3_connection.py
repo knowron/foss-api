@@ -132,6 +132,11 @@ def fetch_file(
         }
     )
     res = requests.get(url, timeout=120)
+    if res.status_code == 404:
+        raise ConnectionException(
+            status_code=res.status_code,
+            detail=f"document '{filename}' not found in bucket '{bucket}'"
+        )
     if res.status_code != 200:  # E.g., doc not found.
         raise ConnectionException(
             status_code=res.status_code,
