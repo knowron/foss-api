@@ -150,4 +150,4 @@ def lambda_handler(event: dict, context) -> dict:
         :obj:`dict`: The extracted doc or the error details, if the extraction
         failed.
     """
-    return extract(event["path"]).dict()
+    return extract(event["path"]).model_dump()
