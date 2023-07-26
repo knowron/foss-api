@@ -81,7 +81,11 @@ def extract(path: str) -> Union[Success, ErrorModel]:
                 toc = None
             pages = []
             for number, raw_page in enumerate(doc, 1):
-                page = dict({"number": number}, **raw_page.get_text("dict"))
+                page = dict(
+                    {"number": number,
+                     "rotation": raw_page.rotation},
+                    **raw_page.get_text("dict")
+                )
                 for block in page["blocks"]:
                     if block["type"] == 0:  # text
                         for line in block["lines"]:
