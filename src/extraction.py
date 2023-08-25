@@ -80,8 +80,12 @@ def extract(path: str) -> Union[Success, ErrorModel]:
             if not toc:
                 toc = None
             pages = []
-            for number, page in enumerate(doc, 1):
-                page = dict({"number": number}, **page.get_text("dict"))
+            for number, raw_page in enumerate(doc, 1):
+                page = dict(
+                    {"number": number,
+                     "rotation": raw_page.rotation},
+                    **raw_page.get_text("dict")
+                )
                 for block in page["blocks"]:
                     if block["type"] == 0:  # text
                         for line in block["lines"]:
@@ -101,6 +105,16 @@ def extract(path: str) -> Union[Success, ErrorModel]:
                         # For now, we don't return images to reduce the response
                         # size.
                         block["image"] = ""
+                # `dict.fromkeys` is used to remove duplicates keeping the order.
+                page["line_drawings"] = list(dict.fromkeys(
+                    (round(item[1][0], 2),  # x0
+                     round(item[1][1], 2),  # y0
+                     round(item[2][0], 2),  # x1
+                     round(item[2][1], 2))  # y1
+                    for drawing in raw_page.get_drawings()
+                    for item in drawing["items"]
+                    if item[0] == "l"
+                ))
                 pages.append(page)
         elapsed_seconds = time.perf_counter() - start_time
         extracted_doc = {
@@ -140,4 +154,4 @@ def lambda_handler(event: dict, context) -> dict:
         :obj:`dict`: The extracted doc or the error details, if the extraction
         failed.
     """
-    return extract(event["path"]).dict()
+    return extract(event["path"]).model_dump()

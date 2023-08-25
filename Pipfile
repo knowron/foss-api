@@ -14,6 +14,7 @@ uvicorn = "*"
 requests = "*"
 boto3 = "*"
 botocore = "*"
+pydantic-settings = "*"
 
 [dev-packages]
 
