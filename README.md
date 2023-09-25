@@ -4,6 +4,24 @@
 
 <br>
 
+## 🗒️ Introduction
+
+This repo defines a [serverless function](https://github.com/knowron/foss-api/blob/main/src/extraction.py) for PDF content extraction via [PyMuPDF](https://pymupdf.readthedocs.io/en/latest/).
+
+The function is currently implemented as an [AWS Lambda](https://aws.amazon.com/lambda/resources/) function deployed as a Docker container.
+
+<br>
+
+## 🏗️ Setting things up
+
+<sup>Note: The following steps apply only to AWS.</sup>
+
+First, the function has to be dockerized and pushed to [Amazon ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/what-is-ecr.html). Thus, create an ECR repository and follow the steps displayed on the AWS Console when clicking on "View push commands" (replace `latest` by the appropriate version). With that, you'll have your Docker image built, pushed, and ready to be consumed by AWS Lambda.
+
+Then, from AWS Lambda, set up a new function and specify the image pushed previously to ECR.
+
+<br>
+
 ## 🔗 Dependencies
 
 This project uses **[`pipenv`](https://pipenv.pypa.io/en/latest/index.html) to
@@ -48,7 +66,14 @@ pipenv lock
 
 <br>
 
-To **activate the virtual enviroment**:
+If you've updated any dependencies, **don't forget to recreate the `requirements.txt` file**:
+```console
+pipenv requirements > requirements.txt
+```
+
+<br>
+
+To **activate the virtual environment**:
 
 ```console
 pipenv shell
@@ -58,33 +83,6 @@ pipenv shell
 
 → For more info and commands, please visit [`pipenv`
 docs](https://pipenv.pypa.io/en/latest/index.html).
-
-<br>
-
-## 🧨 Start up the server
-
-First, place your `.env` under `src/`. To see which variables need to be
-initialized see
-[`src/env-example`](https://github.com/knowron/foss-api/blob/main/env-example).
-
-<br>
-
-Then, run:
-
-```console
-python run_local_server.py
-```
-
-<br>
-
-Once you see:
-
-```
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8002 (Press CTRL+C to quit)
-```
-
-you're ready to go!
 
 <br>
 
