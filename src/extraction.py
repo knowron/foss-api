@@ -133,6 +133,7 @@ def extract(path: str) -> Union[Success, ErrorModel]:
             filepath,
             settings.EXTRACTED_S3_BUCKET_NAME
         )
+        filepath.unlink(missing_ok=True)
         return Success(key=key)
     except RuntimeError as ex:
         return logger.generate_error(
