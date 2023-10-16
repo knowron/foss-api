@@ -63,11 +63,10 @@ ENV: Environment = (Environment(os.environ["ENV"])
 class Settings(BaseSettings):
     """Settings."""
 
-    EXTRACTION_VERSION: str = "1.0"
-
     #######
     # AWS #
     #######
+
     # Set variables below as Environment Variables from the AWS Console.
     AWS_REGION_NAME: str
     AWS_S3_ACCESS_KEY_ID: str

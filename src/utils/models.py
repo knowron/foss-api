@@ -24,6 +24,7 @@ from pydantic import validator
 
 from config import Environment, ENV
 from utils.base_model import CamelModel
+from utils.document_types import DocType
 
 
 class OriginatingSystem(Enum):
@@ -98,8 +99,15 @@ class Success(CamelModel):
     Attributes:
         success (:obj:`bool`):
             Whether the extraction succeeded. Always set to ``True``.
-        key (:obj:`str`):
-            The S3 key to the extracted contents.
+        doc_hash (:obj:`str`):
+            The hash of the document binary.
+        key (:obj:`Optional[str]`):
+            The S3 key to the extracted contents. If :obj:`None`, the document
+            is image-based.
+        doc_type (:obj:`.document_types.DocType`):
+            The type of the document.
     """
     success: bool = True
-    key: str
+    doc_hash: str
+    key: Optional[str]
+    doc_type: DocType

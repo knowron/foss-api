@@ -25,8 +25,8 @@ import hashlib
 import json
 import time
 import urllib.parse
-from typing import Union
 from pathlib import Path
+from typing import Union, Dict
 
 import fitz
 from fitz import sRGB_to_rgb
@@ -34,6 +34,7 @@ from botocore.exceptions import BotoCoreError
 
 from config import settings
 from utils import s3_connection
+from utils.document_types import DocType
 from utils.logging_utils import Logger, ErrorModel
 from utils.models import Success
 
@@ -80,6 +81,10 @@ def extract(path: str) -> Union[Success, ErrorModel]:
             if not toc:
                 toc = None
             pages = []
+            block_type_counts: Dict[str, int] = {
+                "text": 0,
+                "image": 0
+            }
             for number, raw_page in enumerate(doc, 1):
                 page = dict(
                     {"number": number,
@@ -88,6 +93,7 @@ def extract(path: str) -> Union[Success, ErrorModel]:
                 )
                 for block in page["blocks"]:
                     if block["type"] == 0:  # text
+                        block_type_counts["text"] += 1
                         for line in block["lines"]:
                             for span in line["spans"]:
                                 # Encode the text in UTF-8. If the text cannot
@@ -102,6 +108,7 @@ def extract(path: str) -> Union[Success, ErrorModel]:
                                     r, g, b = sRGB_to_rgb(span["color"])
                                     span["color"] = f"#{r:02x}{g:02x}{b:02x}"
                     elif block["type"] == 1:  # image
+                        block_type_counts["image"] += 1
                         # For now, we don't return images to reduce the response
                         # size.
                         block["image"] = ""
@@ -117,24 +124,32 @@ def extract(path: str) -> Union[Success, ErrorModel]:
                 ))
                 pages.append(page)
         elapsed_seconds = time.perf_counter() - start_time
-        extracted_doc = {
-            "path": path,
-            "hash": doc_hash,
-            "elapsed_seconds": round(elapsed_seconds, 2),
-            "extraction_version": settings.EXTRACTION_VERSION,
-            "toc": toc,
-            "pages": pages
-        }
-        filepath = (Path("/tmp")/f"{path}").with_suffix('.json')
-        filepath.parents[0].mkdir(parents=True, exist_ok=True)
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(extracted_doc, f)
-        key = s3_connection.upload_file(
-            filepath,
-            settings.EXTRACTED_S3_BUCKET_NAME
+        doc_type: DocType = DocType.determine(
+            block_type_counts["text"],
+            block_type_counts["image"]
         )
-        filepath.unlink(missing_ok=True)
-        return Success(key=key)
+        if doc_type in (DocType.EMPTY, DocType.IMAGE_BASED):
+            key = None
+        elif doc_type is DocType.TEXT_BASED:
+            extracted_doc = {
+                "path": path,
+                "hash": doc_hash,
+                "elapsed_seconds": round(elapsed_seconds, 2),
+                "toc": toc,
+                "pages": pages
+            }
+            filepath = (Path("/tmp")/f"{path}").with_suffix('.json')
+            filepath.parents[0].mkdir(parents=True, exist_ok=True)
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(extracted_doc, f)
+            key = s3_connection.upload_file(
+                filepath,
+                settings.EXTRACTED_S3_BUCKET_NAME
+            )
+            filepath.unlink(missing_ok=True)
+        else:
+            raise NotImplementedError(f'unrecognized doc type "{doc_type}"')
+        return Success(doc_hash=doc_hash, key=key, doc_type=doc_type)
     except RuntimeError as ex:
         return logger.generate_error(
             path=path,
