@@ -149,7 +149,7 @@ def extract(path: str) -> Union[Success, ErrorModel]:
             filepath.unlink(missing_ok=True)
         else:
             raise NotImplementedError(f'unrecognized doc type "{doc_type}"')
-        return Success(doc_hash=doc_hash, key=key, doc_type=doc_type)
+        return Success(doc_hash=doc_hash, key=key, doc_type=doc_type.value)
     except RuntimeError as ex:
         return logger.generate_error(
             path=path,

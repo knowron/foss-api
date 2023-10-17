@@ -104,10 +104,11 @@ class Success(CamelModel):
         key (:obj:`Optional[str]`):
             The S3 key to the extracted contents. If :obj:`None`, the document
             is image-based.
-        doc_type (:obj:`.document_types.DocType`):
-            The type of the document.
+        doc_type (:obj:`str`):
+            The type of the document. Must be one of the values defined in
+            :class:`utils.document_types.DocType`.
     """
     success: bool = True
     doc_hash: str
     key: Optional[str]
-    doc_type: DocType
+    doc_type: str
