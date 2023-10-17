@@ -81,7 +81,7 @@ def extract(path: str) -> Union[Success, ErrorModel]:
             if not toc:
                 toc = None
             pages = []
-            block_type_counts: Dict[str, int] = {
+            element_type_counts: Dict[str, int] = {
                 "text": 0,
                 "image": 0,
                 "drawing": 0,
@@ -94,10 +94,10 @@ def extract(path: str) -> Union[Success, ErrorModel]:
                 )
                 # Images can appear referenced at the page level or included
                 # as an image block (handled below).
-                block_type_counts["image"] += len(raw_page.get_images())
+                element_type_counts["image"] += len(raw_page.get_images())
                 for block in page["blocks"]:
                     if block["type"] == 0:  # text
-                        block_type_counts["text"] += 1
+                        element_type_counts["text"] += 1
                         for line in block["lines"]:
                             for span in line["spans"]:
                                 # Encode the text in UTF-8. If the text cannot
@@ -112,12 +112,12 @@ def extract(path: str) -> Union[Success, ErrorModel]:
                                     r, g, b = sRGB_to_rgb(span["color"])
                                     span["color"] = f"#{r:02x}{g:02x}{b:02x}"
                     elif block["type"] == 1:  # image
-                        block_type_counts["image"] += 1
+                        element_type_counts["image"] += 1
                         # For now, we don't return images to reduce the response
                         # size.
                         block["image"] = ""
                 page_drawings = raw_page.get_drawings()
-                block_type_counts["drawing"] = len(page_drawings)
+                element_type_counts["drawing"] = len(page_drawings)
                 # `dict.fromkeys` is used to remove duplicates keeping the order.
                 page["line_drawings"] = list(dict.fromkeys(
                     (round(item[1][0], 2),  # x0
@@ -131,9 +131,9 @@ def extract(path: str) -> Union[Success, ErrorModel]:
                 pages.append(page)
         elapsed_seconds = time.perf_counter() - start_time
         doc_type: DocType = DocType.determine(
-            block_type_counts["text"],
-            block_type_counts["image"]
-            block_type_counts["drawing"]
+            element_type_counts["text"],
+            element_type_counts["image"],
+            element_type_counts["drawing"]
         )
         if doc_type in (DocType.EMPTY, DocType.IMAGE_BASED):
             key = None

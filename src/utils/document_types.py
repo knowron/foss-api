@@ -39,31 +39,31 @@ class DocType(Enum):
     @classmethod
     def determine(
         cls,
-        text_block_count: int,
-        image_block_count: int
-        drawing_block_count: int
+        text_count: int,
+        image_count: int,
+        drawing_count: int
     ):
         """Determine the type of a document.
 
         Args:
-            text_block_count (:obj:`int`):
+            text_count (:obj:`int`):
                 The number of text blocks in the document.
-            image_block_count (:obj:`int`):
-                The number of image blocks in the document.
-            drawing_block_count (:obj:`int`):
+            image_count (:obj:`int`):
+                The number of images in the document.
+            drawing_count (:obj:`int`):
                 The number of drawings in the document.
 
         Returns:
             :obj:`DocType`: The type of the document.
         """
-        total_block_count: int = (
-            text_block_count + image_block_count + drawing_block_count
+        total_count: int = (
+            text_count + image_count + drawing_count
         )
-        if total_block_count == 0:
+        if total_count == 0:
             return cls.EMPTY
-        text_block_ratio = text_block_count / total_block_count
-        image_block_ratio = image_block_count / total_block_count
-        if text_block_ratio > image_block_ratio:
+        text_ratio = text_count / total_count
+        image_ratio = image_count / total_count
+        if text_ratio > image_ratio:
             return cls.TEXT_BASED
         # Note: If there is no text but there are drawings, we also consider
         # the doc image-based.
