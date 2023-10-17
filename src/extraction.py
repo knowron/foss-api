@@ -83,7 +83,8 @@ def extract(path: str) -> Union[Success, ErrorModel]:
             pages = []
             block_type_counts: Dict[str, int] = {
                 "text": 0,
-                "image": 0
+                "image": 0,
+                "drawing": 0,
             }
             for number, raw_page in enumerate(doc, 1):
                 page = dict(
@@ -115,13 +116,15 @@ def extract(path: str) -> Union[Success, ErrorModel]:
                         # For now, we don't return images to reduce the response
                         # size.
                         block["image"] = ""
+                page_drawings = raw_page.get_drawings()
+                block_type_counts["drawing"] = len(page_drawings)
                 # `dict.fromkeys` is used to remove duplicates keeping the order.
                 page["line_drawings"] = list(dict.fromkeys(
                     (round(item[1][0], 2),  # x0
                      round(item[1][1], 2),  # y0
                      round(item[2][0], 2),  # x1
                      round(item[2][1], 2))  # y1
-                    for drawing in raw_page.get_drawings()
+                    for drawing in page_drawings
                     for item in drawing["items"]
                     if item[0] == "l"
                 ))
@@ -130,6 +133,7 @@ def extract(path: str) -> Union[Success, ErrorModel]:
         doc_type: DocType = DocType.determine(
             block_type_counts["text"],
             block_type_counts["image"]
+            block_type_counts["drawing"]
         )
         if doc_type in (DocType.EMPTY, DocType.IMAGE_BASED):
             key = None
