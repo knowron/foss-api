@@ -91,6 +91,9 @@ def extract(path: str) -> Union[Success, ErrorModel]:
                      "rotation": raw_page.rotation},
                     **raw_page.get_text("dict")
                 )
+                # Images can appear referenced at the page level or included
+                # as an image block (handled below).
+                block_type_counts["image"] += len(raw_page.get_images())
                 for block in page["blocks"]:
                     if block["type"] == 0:  # text
                         block_type_counts["text"] += 1
