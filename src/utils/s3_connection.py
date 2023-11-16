@@ -42,6 +42,9 @@ class ConnectionException(ConnectionError):
         self.detail = detail
         super().__init__()
 
+    def __str__(self):
+        return f"({self.status_code}) {self.detail}"
+
     def __repr__(self):
         return self.detail
 
