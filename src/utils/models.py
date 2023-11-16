@@ -18,13 +18,11 @@
 """Models for document extraction."""
 
 from enum import Enum
-from typing import Optional
 
 from pydantic import validator
 
 from config import Environment, ENV
 from utils.base_model import CamelModel
-from utils.document_types import DocType
 
 
 class OriginatingSystem(Enum):
@@ -54,9 +52,9 @@ class ErrorModel(CamelModel):
             The path of the document that could not be extracted.
         status_code (:obj:`int`):
             The status code of the error, e.g., ``500``.
-        message (:obj:`Optional[str]`):
+        message (:obj:`str | None`):
             The error message (if any).
-        stack_trace (:obj:`Optional[str]`):
+        stack_trace (:obj:`str | None`):
             The stack trace (if errors have happened).
     """
 
@@ -67,8 +65,8 @@ class ErrorModel(CamelModel):
     log_level: str
     path: str
     status_code: int
-    message: Optional[str]
-    stack_trace: Optional[str]
+    message: str | None
+    stack_trace: str | None
 
     @validator("message")
     def set_default_message(cls, message):
@@ -101,7 +99,7 @@ class Success(CamelModel):
             Whether the extraction succeeded. Always set to ``True``.
         doc_hash (:obj:`str`):
             The hash of the document binary.
-        key (:obj:`Optional[str]`):
+        key (:obj:`str | None`):
             The S3 key to the extracted contents. If :obj:`None`, the document
             is image-based.
         doc_type (:obj:`str`):
@@ -110,5 +108,5 @@ class Success(CamelModel):
     """
     success: bool = True
     doc_hash: str
-    key: Optional[str]
+    key: str | None
     doc_type: str

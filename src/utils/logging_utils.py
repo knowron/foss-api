@@ -20,7 +20,6 @@
 import logging
 import traceback
 from datetime import datetime, timezone
-from typing import Optional
 
 from config import settings, ENV
 from .models import ErrorModel, OriginatingSystem
@@ -32,13 +31,13 @@ class Logger:
     Attributes:
         name (:obj:`str`):
             The name of the logger.
-        _log_level (:obj:`Optional[int]`):
+        _log_level (:obj:`int | None`):
             The logging level, e.g. :obj:`logging.WARNING`.
         _logger (:obj:`logging.Logger`):
             The logger used internally by this class.
     """
 
-    def __init__(self, name: str, log_level: Optional[int] = None):
+    def __init__(self, name: str, log_level: int | None = None):
         self.name = name
         if log_level is None:
             log_level = settings.get_log_level()
@@ -105,7 +104,7 @@ class Logger:
         self,
         path: str,
         status_code: int,
-        exception: Optional[Exception] = None
+        exception: Exception | None = None
     ) -> ErrorModel:
         """Compile an :obj:`ErrorModel`.
 

@@ -26,7 +26,6 @@ import json
 import time
 import urllib.parse
 from pathlib import Path
-from typing import Union, Dict
 
 import fitz
 from fitz import sRGB_to_rgb
@@ -38,11 +37,10 @@ from utils.document_types import DocType
 from utils.logging_utils import Logger, ErrorModel
 from utils.models import Success
 
-
 logger = Logger(name=__name__)
 
 
-def extract(path: str) -> Union[Success, ErrorModel]:
+def extract(path: str) -> Success | ErrorModel:
     """Extract the text of a PDF.
 
     Args:
@@ -50,7 +48,7 @@ def extract(path: str) -> Union[Success, ErrorModel]:
             The path of the document to extract the text from.
 
     Returns:
-        :obj:`Union[Success, ErrorModel]`: The S3 key to the extracted contents
+        :obj:`Success | ErrorModel`: The S3 key to the extracted contents
         from the document or an error if the extraction failed.
     """
     start_time = time.perf_counter()
@@ -81,7 +79,7 @@ def extract(path: str) -> Union[Success, ErrorModel]:
             if not toc:
                 toc = None
             pages = []
-            element_type_counts: Dict[str, int] = {
+            element_type_counts: dict[str, int] = {
                 "text": 0,
                 "image": 0,
                 "drawing": 0,
