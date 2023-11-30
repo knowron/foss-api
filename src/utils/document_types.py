@@ -17,8 +17,6 @@
 
 from enum import Enum
 
-from config import settings
-
 
 class DocType(Enum):
     """The type of document.

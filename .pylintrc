@@ -7,6 +7,9 @@
 
 [MASTER]
 
+# Minimum Python version supported.
+py-version=3.10
+
 # Files or directories to be skipped. They should be base names, not paths.
 ignore=third_party
 

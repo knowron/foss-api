@@ -61,7 +61,7 @@ pipenv install package==0.5
 To **update all dependencies**:
 
 ```console
-pipenv lock
+pipenv update
 ```
 
 <br>
