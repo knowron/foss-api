@@ -10,7 +10,7 @@ charset-normalizer==3.3.2 ; python_full_version >= '3.7.0'
 click==8.1.7 ; python_version >= '3.7'
 dill==0.3.7 ; python_version < '3.11'
 exceptiongroup==1.1.3 ; python_version < '3.11'
-fastapi==0.104.1
+fastapi==0.109.1
 h11==0.14.0 ; python_version >= '3.7'
 idna==3.4 ; python_version >= '3.5'
 isort==5.12.0 ; python_full_version >= '3.8.0'
