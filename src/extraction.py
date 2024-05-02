@@ -115,7 +115,7 @@ def extract(path: str) -> Success | ErrorModel:
                         # size.
                         block["image"] = ""
                 page_drawings = raw_page.get_drawings()
-                element_type_counts["drawing"] = len(page_drawings)
+                element_type_counts["drawing"] += len(page_drawings)
                 # `dict.fromkeys` is used to remove duplicates keeping the order.
                 page["line_drawings"] = list(dict.fromkeys(
                     (round(item[1][0], 2),  # x0
