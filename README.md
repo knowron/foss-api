@@ -10,6 +10,39 @@ This repo defines a [serverless function](https://github.com/knowron/foss-api/bl
 
 The function is currently implemented as an [AWS Lambda](https://aws.amazon.com/lambda/resources/) function deployed as a Docker container.
 
+## 🖥️ Local Development
+
+For local development and testing, you can run this Lambda function as a FastAPI server:
+
+### Quick Start
+
+1. **Configure AWS credentials**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your AWS credentials and S3 bucket names
+   ```
+
+2. **Start the server**:
+   ```bash
+   python run_locally.py
+   ```
+
+3. **Test the API**:
+   ```bash
+   python test_local_api.py
+   ```
+
+The server will be available at `http://localhost:8000` with interactive documentation at `http://localhost:8000/docs`.
+
+### API Endpoints
+
+- `POST /extract` - Extract text from PDF (FastAPI format)
+- `POST /extract-lambda` - Extract text from PDF (Lambda event format)
+- `GET /health` - Health check
+- `GET /config` - Configuration info
+
+See [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) for detailed instructions.
+
 <br>
 
 ## 🏗️ Setting things up
