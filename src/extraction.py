@@ -40,6 +40,23 @@ from utils.models import Success
 logger = Logger(name=__name__)
 
 
+def _convert_bytes_to_str(obj):
+    """Recursively convert bytes to string in nested structures.
+    
+    PyMuPDF 1.26.0 may return bytes in some fields that need to be 
+    converted for JSON serialization.
+    """
+    if isinstance(obj, bytes):
+        return obj.decode('utf-8', errors='replace')
+    elif isinstance(obj, dict):
+        return {key: _convert_bytes_to_str(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [_convert_bytes_to_str(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(_convert_bytes_to_str(item) for item in obj)
+    return obj
+
+
 def extract(path: str) -> Success | ErrorModel:
     """Extract the text of a PDF.
 
@@ -72,9 +89,12 @@ def extract(path: str) -> Success | ErrorModel:
 
     # Extract PDF contents.
     try:
-        with fitz.open(stream=doc,
+        # Calculate hash from the original document bytes
+        doc_bytes = doc.getvalue()
+        doc_hash = hashlib.sha256(doc_bytes).hexdigest()
+        
+        with fitz.open(stream=doc_bytes,
                        filetype="application/pdf") as doc:
-            doc_hash = hashlib.sha256(doc.stream).hexdigest()
             toc = doc.get_toc()
             if not toc:
                 toc = None
@@ -85,10 +105,14 @@ def extract(path: str) -> Success | ErrorModel:
                 "drawing": 0,
             }
             for number, raw_page in enumerate(doc, 1):
+                page_dict = raw_page.get_text("dict")
+                # Convert any bytes in the page dict to strings
+                page_dict = _convert_bytes_to_str(page_dict)
+                
                 page = dict(
                     {"number": number,
                      "rotation": raw_page.rotation},
-                    **raw_page.get_text("dict")
+                    **page_dict
                 )
                 # Images can appear referenced at the page level or included
                 # as an image block (handled below).
