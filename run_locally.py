@@ -158,7 +158,7 @@ async def extract_document(request: ExtractionRequest):
         result = extract(request.path)
         
         # Convert the result to dict (same as Lambda handler)
-        response_data = result.model_dump()
+        response_data = result.model_dump(mode='json')
         
         # Return appropriate HTTP status code based on success
         if response_data.get("success", False):
